@@ -1,0 +1,76 @@
+Text Prediction Algorithm
+========================================================
+author: Eric Thompson
+date: January 2018
+autosize: true
+
+Executive Summary
+========================================================
+
+- The iris dataset in base R consists of 150 observations of three different
+species of iris (virginica, setosa and versicolor).  Each observation 
+includes data for Petal Length, Petal Width, Sepal Length and Sepal Width.
+- We use a k-nearest neighbors algorithm (k=13) to classify an unknown
+species type based upon the length and width measurements above.
+- Finally, we build a Shiny app which allow users to interactively
+predict the species based on these measurement variables.
+- [CLICK HERE] (https://github.com/etsafe11/predicting_iris_species) for 
+the GitHub repo containing a README and full R scripts for our Shiny app.
+
+- This example inspired by Jalayer Academy's tutorial video on Youtube:
+[link] (https://www.youtube.com/watch?v=DkLNb0CXw84&t=126s)
+
+Shiny App
+========================================================
+
+- Our Shiny app is deployed on RPubs at:  [THIS LINK] (https://etsafe11.shinyapps.io/week4_project/)
+- It consists of ui.R and server.R files
+    + ui.R creates the user interface including the four input 
+      measurements for petal and sepal
+    + server.R provides reactive functions which take the four
+      input measurements as inputs and immediately provide a
+      species prediction using a k-nearest neighbors classification
+      algorithm
+- For higher accuracy, our algorithm nomalizes the predictor variables
+  using the below function:
+
+```{r, echo=TRUE}
+  normalize <- function(x) {
+    return( (x - min(x)) / (max(x) - min(x)) ) 
+  }
+```
+
+
+Shiny App
+========================================================
+- Below is the `knn()` algorithm inside the  reactive function:
+
+``` {r, echo = TRUE}
+library(class)
+library(shiny)
+  m1pred <- reactive({
+    Sepal.Length.Input <- input$sliderSepalLength
+    Sepal.Width.Input <- input$sliderSepalWidth
+    Petal.Length.Input <- input$sliderPetalLength
+    Petal.Width.Input <- input$sliderPetalWidth
+    knn(train = iris_train, test = data.frame(
+      (Sepal.Length.Input - min(iris$Sepal.Length)) / (max(iris$Sepal.Length) - min(iris$Sepal.Length)),
+      (Sepal.Width.Input - min(iris$Sepal.Width)) / (max(iris$Sepal.Width) - min(iris$Sepal.Width)),
+      (Petal.Length.Input - min(iris$Petal.Length)) / (max(iris$Petal.Length) - min(iris$Petal.Length)),
+      (Petal.Width.Input - min(iris$Petal.Width)) / (max(iris$Petal.Width) - min(iris$Petal.Width))
+      ), 
+          cl = iris_train_target, k = 13
+    )
+  })
+```
+
+Use Cases and Further Exploration
+========================================================
+- This Shiny App demonstrates how we can pair classification
+algorithms with simple user interfaces to easily create accurate
+predictions about species type for irises.
+- Classification algorithms have huge business value, e.g. detection
+of credit card fraud or spam email.
+- For significantly more complex algorithms and and larger datasets
+we will want to integrate our app with some cloud service which can
+auto-scale and reduce trainig times.

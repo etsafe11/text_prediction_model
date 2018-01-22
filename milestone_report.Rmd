@@ -1,0 +1,290 @@
+---
+title: "Milestone Report"
+author: "Eric Thompson"
+date: "January 7, 2018"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+```
+
+
+### Introduction
+
+This is a milestone report for the Coursera Data Science Specialization's capstone 
+project. Our ultimate aim is to build a text prediction model.  To this point we
+have ingested the raw, original text files into corpus objects using the **quanteda** 
+package, done thorough exploratory analysis including line a word count summaries, 
+plots of most-frequent words and a variety of other interesting features of the data. 
+Additionally we have begun constructing an n-gram model for text prediction while 
+considering processing time and size.
+
+
+### Data Ingestion
+
+We begin by ingesting three text files:
+
+1. a set of texts lines of blog posts
+2. a set of text lines of  news articles
+3. a set of text lines of Tweets
+
+For modeling purposes we will soon merge the three types of text lines into a single 
+corpus, but first we create document-level variables to classify each line as either 
+blog, news or Twitter.
+
+```{r include = FALSE, cache = TRUE}
+library(dplyr)
+library(readr)
+library(rlang)
+library(mnormt)
+library(tidytext)
+library(quanteda)
+library(readtext)
+library(topicmodels)
+library(ggplot2)
+library(qdapDictionaries)
+library(qdapRegex)
+library(qdapTools)
+library(RColorBrewer)
+library(NLP)
+library(tm)
+library(SnowballC)
+library(slam)
+library(sqldf)
+library(data.table)
+library(knitr)
+
+setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+
+load("table1.RData")
+load("table2.RData")
+load("table3.RData")
+load("table4.RData")
+load("us_DFM.RData")
+load("sample_us_DFM.RData")
+load("sample_us_corpus.RData")
+```
+
+```{r eval = TRUE, cache = TRUE, include = TRUE}
+setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+
+us_blogs <- read_lines("en_US.blogs.txt")
+us_news <- read_lines("en_US.news.txt")
+us_twitter <- read_lines("en_US.twitter.txt")
+
+us_blogs_corpus <- corpus(us_blogs)
+us_news_corpus <- corpus(us_news)
+us_twitter_corpus <- corpus(us_twitter)
+
+# Add document-level variables (docvars) for blogs, news and twitter
+docvars(us_blogs_corpus, field = "source") <- rep("blogs", times = nrow(us_blogs_corpus$documents))
+docvars(us_news_corpus, field = "source") <- rep("news", times = nrow(us_news_corpus$documents))
+docvars(us_twitter_corpus, field = "source") <- rep("twitter", times = nrow(us_twitter_corpus$documents))
+```
+
+
+### Line Counts
+
+Next we merge the three data sources into a single corpus and make a table showing
+how many documents of each source type exist in our newly-merged corpus. We see there 
+are about 900K blog lines, 1 million news lines and 2.4 million Tweets.
+
+```{r include = TRUE, eval = FALSE}
+us_corpus <- us_blogs_corpus + us_news_corpus + us_twitter_corpus
+table(us_corpus$documents$source)
+```
+
+
+### Sample Dataset
+
+Since our merged dataset is over 4 million text entries, we can retain a large sample 
+size but improve processing time dramatically by using only 5% of the original data
+set as the input.
+
+Below we see how many text lines of each type (blogs, news, Twitter) exist in the 
+sample dataset.  This will be helpful in constructing our text prediction model. 
+Based on the line counts below, we see that the sample data set is indeed 
+approximately five percent of the total, original data set.  Note that for most of 
+the exploratory analysis below, we are using the original, merged dataset, rather 
+than this sample dataset.
+
+```{r include = TRUE, eval = FALSE}
+sample_us_corpus <- corpus_sample(us_corpus, size = round(.05 * nrow(us_corpus$documents)))
+table(sample_us_corpus$documents$source)
+```
+
+
+### Exploratory Analysis
+
+#### Keywords-in-Context
+Below is a quick way to see a particular word in its various contexts.
+
+```{r include = TRUE, eval = TRUE}
+kwic(sample_us_corpus[1:25000], "terror")
+```
+
+
+#### Word Counts
+
+In addition to our line counts, we want to count words.  Here we see there are over 
+101 million different words in our original dataset.  Below is a table showing the
+most frequently-occuring word.  You can see that "the" appears over 4.7 million times.
+
+```{r include = TRUE, eval = TRUE}
+sum(textstat_frequency(us_DFM)$frequency)
+head(textstat_frequency(us_DFM))
+```
+
+Next we consider the distribution of the word counts even futher.  Specifically, how 
+many unique words does one need in a frequency-sorted dictionary to cover 50% of all 
+word instances in the merged corpus?  Below we see that the top 153 most-common words 
+represent about 50.8 million words, which is approximately 50% of our merged corpus.  
+
+```{r include = TRUE, eval = TRUE}
+sum(textstat_frequency(us_DFM)$frequency[1:153])
+```
+
+Similarly, to cover 90% of the word instances in the corpus, one needs the top 9,000 
+most commonly-occurring words.
+
+```{r}
+sum(textstat_frequency(us_DFM)$frequency[1:9000])
+```
+
+Next we plot the 30 most frequent words:
+
+```{r include = TRUE, eval = TRUE}
+library(ggplot2)
+ggplot(textstat_frequency(us_DFM)[1:30, ], 
+       aes(x = reorder(feature, frequency), y = frequency)) +
+       geom_point() + 
+       labs(x = NULL, y = "Frequency")
+```
+
+Next we find the maximum number of characters in each line.  As expected, the 
+maximum length of any Tweet is 140 characters.
+
+```{r include = TRUE, eval = TRUE}
+max_char_blogs <- nchar(us_blogs[1])
+for(i in 1:length(us_blogs)) {
+        if(nchar(us_blogs[i]) > max_char_blogs) 
+                max_char_blogs <- nchar(us_blogs[i])
+}
+max_char_blogs
+
+max_char_news <- nchar(us_news[1])
+for(i in 1:length(us_news)) {
+        if(nchar(us_news[i]) > max_char_news) 
+                max_char_news <- nchar(us_news[i])
+}
+max_char_news
+
+max_char_twitter <- nchar(us_twitter[1])
+for(i in 1:length(us_twitter)) {
+        if(nchar(us_twitter[i]) > max_char_twitter) 
+                max_char_twitter <- nchar(us_twitter[i])
+}
+max_char_twitter
+```
+
+We can easily calculate the ratio of the word "love" to "hate" in the Twitter dataset.
+
+```{r}
+length(grep("love", us_twitter)) / length(grep("hate", us_twitter)) 
+```
+
+We can create a wordcloud of 500 randomly-sampled elements of our merged corpus. 
+
+```{r}
+# Word Cloud
+set.seed(555)
+textplot_wordcloud(sample_us_DFM[1:130], 
+                   min.freq = 6, 
+                   random.order = FALSE,
+                   rot.per = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+```
+
+
+#### n-grams
+
+An n-gram is a contiguous sequence of n items from a given sequence of text or speech.
+n-grams will be foundational to our model.  
+
+We first show that our merged dataset contains 925,854 different words, or "types".
+
+```{r include=TRUE, eval = TRUE}
+us_DFM@Dim[2]
+```
+
+Below are the top 50 1-grams (single "types"):
+
+```{r eval = FALSE}
+table1 <- topfeatures(us_DFM, n = 50, decreasing = TRUE, scheme = "count")
+head(attr(table1,"names"), 50)
+```
+
+```{r eval = FALSE}
+# Top 2-grams
+table2 <- textstat_collocations(sample_us_corpus, size = 2)
+table2 <- table2[order(table2$count, decreasing = TRUE), ]
+
+# Top 3-grams
+table3 <- textstat_collocations(sample_us_corpus, size = 3)
+table3 <- table3[order(table3$count, decreasing = TRUE), ]
+
+# Top 4-grams
+table4 <- textstat_collocations(sample_us_corpus, size = 4)
+table4 <- table4[order(table4$count, decreasing = TRUE), ]
+```
+
+
+```{r, eval = TRUE}
+# Most common 2-grams
+head(table2)
+# Most common 3-grams
+head(table3)
+# Most common 4-grams
+head(table4)
+```
+
+
+### Model Building
+
+As mentioned previously, n-grams are a core component of our model.  Our goal is to 
+build a text prediction model, and we will begin by creatng a simple model based on
+n-grams. Specifically, our model will rely on a dataset with three columns containing:
+
+1. the first n-1 words in the n-gram
+2. a prediction which is the n/superscript^th word of the n-gram
+3. a count of how many times the n-gram appears in the merged corpus
+
+This is done using the below code.
+
+```{r include = TRUE, eval = FALSE}
+temp2 <- NULL
+temp3 <- NULL
+
+for (i in 1:length(table4$collocation[1:50])) {
+        temp2 <- c(temp2, strsplit(table4$collocation, " ")[[i]][3])
+        temp3 <- c(temp3, strsplit(table4$collocation, " ")[[i]][1:2])
+}
+
+temp4 <- temp3[c(TRUE, FALSE)]
+temp5 <- temp3[c(FALSE, TRUE)]
+temp1 <- paste0(temp4, " ", temp5)
+temp1
+temp2
+```
+
+This code will create the dataset that will be used to create our first text 
+prediction model, a simple model based on n-grams.  Ultimately I expect to need
+Katz back-off, smoothing and/or skip-grams.  But I plan to start with a very simple 
+model.
+
+I would appreciate any feedback on this report.  
+
+
+
