@@ -14,7 +14,7 @@ validation_us_corpus <- corpus_subset(sample_us_corpus,
 
 # Tokenize the corpus, removing punctuation etc
 testing_us_tokens <- tokens(testing_us_corpus, what = "word", 
-                            remove_numbers = TRUE, #remove_punct = TRUE,
+                            remove_numbers = TRUE, remove_punct = TRUE,
                             remove_symbols = TRUE, remove_separators = TRUE,
                             remove_twitter = TRUE, remove_hyphens = TRUE, 
                             remove_url = TRUE, ngrams = 1L, skip = 0L, concatenator = "_")
@@ -151,23 +151,19 @@ save(six_grams_tidy_testing, file = "six_grams_tidy_testing_50000.RData")
 
 # Model Input dataset
 input_testing <- rbindlist(l = list(two_grams_tidy_testing,
-                                    three_grams_tidy_testing,
-                                    four_grams_tidy_testing,
-                                    five_grams_tidy_testing,
-                                    six_grams_tidy_testing),
-                           idcol = TRUE)
-View(tail(input_testing, 50))
+                                three_grams_tidy_testing,
+                                four_grams_tidy_testing,
+                                five_grams_tidy_testing,
+                                six_grams_tidy_testing),
+                                idcol = TRUE)
 
-# It took about 40-55 seconds to run 1,000 rows; we have 250k rows.
-pred_dt <- NULL
-for (i in 1:nrow(input_testing[1:1000])) {
-        pred <- f(input_testing[i, `n-1`])
-        pred_dt <- rbind(pred_dt, pred)
-        #pred_vec <- c(pred_vec, f(input_testing[i, `n-1`]))
-}
-pred_dt
+# Merge testing and training sets
+merged_dt <- merge(input_testing, input_training, by = "n-1", all.x = TRUE)
 
+# Model accuracy is approximately 5.9%
+nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)
 
-
-a <- tokens("we went to the store so much yesterday but then")
-tail(unlist(a), 7)
+# 171,476 words in Second Edition of Oxford English Dictionary
+# so our model is 10,000 times better than a random guess
+(nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)) / (1/171476)
+100/171476
