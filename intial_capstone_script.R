@@ -1,4 +1,4 @@
-setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+setwd("C:/Users/etsaf/RScripts/RScripts/capstone_project/data/")
 
 library(dplyr)
 library(readr)
@@ -17,18 +17,22 @@ library(NLP)
 library(tm)
 library(SnowballC)
 library(slam)
-library(cldr)
+#library(cldr)
 library(sqldf)
 library(data.table)
 library(stringi)
-
-
+library(shiny)
+library(shinythemes)
+library(rsconnect)
+library(sys)
 # To save many hours of processing time, load the following 3 tables. 
 # YOU MUST OPEN WITH RSTUDIO FROM THE WORKING DIRECTORY FOLDER
-#load("table2.RData")
-#load("table3.RData")
-#load("table4.RData")
-#load("table5.RData")
+load("two_grams_tidy_500000.RData")
+load("three_grams_tidy_400000.RData")
+load("four_grams_tidy_300000.RData")
+load("five_grams_tidy_300000.RData")
+load("six_grams_tidy_300000.RData")
+load("input_training.RData")
 
 # library(RWekajars) # this package isn't loading correctly
 # library(rJava) # this package isn't loading correctly
@@ -57,21 +61,32 @@ docvars(us_twitter_corpus, field = "source") <- rep("twitter", times = nrow(us_t
 us_corpus <- us_blogs_corpus + us_news_corpus + us_twitter_corpus
 
 # 35% sample
+set.seed(555)
 sample_us_corpus <- corpus_sample(us_corpus, 
-        size = round(.35 * nrow(us_corpus$documents)))
+                                 size = round(.35 * nrow(us_corpus$documents)))
+
+training_us_corpus <- corpus_subset(sample_us_corpus, 
+                                1:ndoc(sample_us_corpus) %in% 1:1000000)
+
+testing_us_corpus <- corpus_subset(sample_us_corpus, 
+                                1:ndoc(sample_us_corpus) %in% 1000001:1300000)
+
+validation_us_corpus <- corpus_subset(sample_us_corpus, 
+                                1:ndoc(sample_us_corpus) %in% 1300001:1450000)
 
 # Tokenize the corpus, removing punctuation etc
-sample_us_tokens <- tokens(sample_us_corpus, what = "word", 
-        remove_numbers = TRUE, remove_punct = TRUE,
-        remove_symbols = TRUE, remove_separators = TRUE,
-        remove_twitter = TRUE, remove_hyphens = TRUE, 
-        remove_url = TRUE, ngrams = 1L, skip = 0L, concatenator = "_")
+training_us_tokens <- tokens(training_us_corpus, what = "word", 
+                           remove_numbers = TRUE, remove_punct = TRUE,
+                           remove_symbols = TRUE, remove_separators = TRUE,
+                           remove_twitter = TRUE, remove_hyphens = TRUE, 
+                           remove_url = TRUE, ngrams = 1L, skip = 0L, concatenator = "_")
 
 # Make 2-grams frequency table
-two_temp <- tokens_ngrams(sample_us_tokens, n = 2L, skip = 0L, concatenator = "_")
+two_temp <- tokens_ngrams(training_us_tokens, n = 2L, skip = 0L, concatenator = "_")
 two_temp <- as.data.table(table(unlist(two_temp)))
 two_temp <- two_temp[order(N, decreasing = TRUE)]
-two_temp <- two_temp[1:1000000, ]
+save(two_temp, file = "two_temp.RData")
+two_temp <- two_temp[1:500000, ]
 
 x <- NULL
 y <- NULL
@@ -92,45 +107,208 @@ for (i in 1:nrow(two_temp[, 1])) {
 two_grams_tidy <- data.table(x, y, two_temp$N)
 names(two_grams_tidy) <- c("n-1", "n", "count")
 two_grams_tidy <- two_grams_tidy[!duplicated(two_grams_tidy[, 1]), ]
-str(two_grams_tidy)
-save(two_grams_tidy, file = "two_grams_tidy.RData")
+save(two_grams_tidy, file = "two_grams_tidy_500000.RData")
 
 # Make 3-grams frequency table
-three_temp <- tokens_ngrams(sample_us_tokens, n = 3L, skip = 0L, concatenator = "_")
-three_grams <- as.data.table(table(unlist(three_temp)))
-three_grams <- three_grams[order(N, decreasing = TRUE)]
-three_grams <- three_grams[!duplicated(three_grams[, 1]), ]
-save(three_grams, file = "three_grams.RData")
-rm(three_temp)
+three_temp <- tokens_ngrams(training_us_tokens, n = 3L, skip = 0L, concatenator = "_")
+three_temp <- as.data.table(table(unlist(three_temp)))
+three_temp <- three_temp[order(N, decreasing = TRUE)]
+save(three_temp, file = "three_temp.RData")
+three_temp <- three_temp[1:400000, ]
+
+x <- NULL
+y <- NULL
+z <- NULL
+three_grams_tidy <- NULL
+
+for (i in 1:nrow(three_temp[, 1])) {
+        z <- list(strsplit(as.character(three_temp[i, 1]), split = "_")[[1]][1:2])
+        z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
+        x <- rbind(x, z)
+}
+
+for (i in 1:nrow(three_temp[, 1])) {
+        z <- unlist(strsplit(as.character(three_temp[i, 1]), split = "_"))[3]
+        y <- rbind(y, z)
+}
+
+three_grams_tidy <- data.table(x, y, three_temp$N)
+names(three_grams_tidy) <- c("n-1", "n", "count")
+three_grams_tidy <- three_grams_tidy[!duplicated(three_grams_tidy[, 1]), ]
+save(three_grams_tidy, file = "three_grams_tidy_400000.RData")
 
 # Make 4-grams frequency table
-four_temp <- tokens_ngrams(sample_us_tokens, n = 4L, skip = 0L, concatenator = "_")
-four_grams <- as.data.table(table(unlist(four_temp)))
-four_grams <- four_grams[order(N, decreasing = TRUE)]
-four_grams <- four_grams[!duplicated(four_grams[, 1]), ]
-save(four_grams, file = "four_grams.RData")
-rm(four_temp)
+four_temp <- tokens_ngrams(training_us_tokens, n = 4L, skip = 0L, concatenator = "_")
+four_temp <- as.data.table(table(unlist(four_temp)))
+four_temp <- four_temp[order(N, decreasing = TRUE)]
+save(four_temp, file = "four_temp.RData")
+four_temp <- four_temp[1:300000, ]
+
+x <- NULL
+y <- NULL
+z <- NULL
+four_grams_tidy <- NULL
+
+for (i in 1:nrow(four_temp[, 1])) {
+        z <- list(strsplit(as.character(four_temp[i, 1]), split = "_")[[1]][1:3])
+        z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
+        x <- rbind(x, z)
+}
+
+for (i in 1:nrow(four_temp[, 1])) {
+        z <- unlist(strsplit(as.character(four_temp[i, 1]), split = "_"))[4]
+        y <- rbind(y, z)
+}
+
+four_grams_tidy <- data.table(x, y, four_temp$N)
+names(four_grams_tidy) <- c("n-1", "n", "count")
+four_grams_tidy <- four_grams_tidy[!duplicated(four_grams_tidy[, 1]), ]
+save(four_grams_tidy, file = "four_grams_tidy_300000.RData")
 
 # Make 5-grams frequency table
-five_temp <- tokens_ngrams(sample_us_tokens, n = 5L, skip = 0L, concatenator = "_")
-five_grams <- as.data.table(table(unlist(five_temp)))
-five_grams <- five_grams[order(N, decreasing = TRUE)]
-five_grams <- five_grams[!duplicated(five_grams[, 1]), ]
-save(five_grams, file = "five_grams.RData")
-rm(five_temp)
+five_temp <- tokens_ngrams(training_us_tokens, n = 5L, skip = 0L, concatenator = "_")
+five_temp <- as.data.table(table(unlist(five_temp)))
+head(five_temp)
+five_temp <- five_temp[order(N, decreasing = TRUE)]
+save(five_temp, file = "five_temp.RData")
+five_temp <- five_temp[1:300000, ]
+
+x <- NULL
+y <- NULL
+z <- NULL
+five_grams_tidy <- NULL
+
+for (i in 1:nrow(five_temp[, 1])) {
+        z <- list(strsplit(as.character(five_temp[i, 1]), split = "_")[[1]][1:4])
+        z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
+        x <- rbind(x, z)
+}
+
+for (i in 1:nrow(five_temp[, 1])) {
+        z <- unlist(strsplit(as.character(five_temp[i, 1]), split = "_"))[5]
+        y <- rbind(y, z)
+}
+
+five_grams_tidy <- data.table(x, y, five_temp$N)
+names(five_grams_tidy) <- c("n-1", "n", "count")
+five_grams_tidy <- five_grams_tidy[!duplicated(five_grams_tidy[, 1]), ]
+save(five_grams_tidy, file = "five_grams_tidy_300000.RData")
+
 
 # Make 6-grams frequency table
-six_temp <- tokens_ngrams(sample_us_tokens, n = 6L, skip = 0L, concatenator = "_")
-six_grams <- as.data.table(table(unlist(six_temp)))
-six_grams <- six_grams[order(N, decreasing = TRUE)]
-six_grams <- six_grams[!duplicated(six_grams[, 1]), ]
-save(six_grams, file = "six_grams.RData")
-rm(six_temp)
+six_temp <- tokens_ngrams(training_us_tokens, n = 6L, skip = 0L, concatenator = "_")
+six_temp <- as.data.table(table(unlist(six_temp)))
+six_temp <- six_temp[order(N, decreasing = TRUE)]
+save(six_temp, file = "six_temp.RData")
+six_temp <- six_temp[1:300000, ]
+
+x <- NULL
+y <- NULL
+z <- NULL
+six_grams_tidy <- NULL
+
+for (i in 1:nrow(six_temp[, 1])) {
+        z <- list(strsplit(as.character(six_temp[i, 1]), split = "_")[[1]][1:5])
+        z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
+        x <- rbind(x, z)
+}
+
+for (i in 1:nrow(six_temp[, 1])) {
+        z <- unlist(strsplit(as.character(six_temp[i, 1]), split = "_"))[6]
+        y <- rbind(y, z)
+}
+
+six_grams_tidy <- data.table(x, y, six_temp$N)
+names(six_grams_tidy) <- c("n-1", "n", "count")
+six_grams_tidy <- six_grams_tidy[!duplicated(six_grams_tidy[, 1]), ]
+save(six_grams_tidy, file = "six_grams_tidy_300000.RData")
+
+# Model Input dataset
+input_training <- rbindlist(l = list(two_grams_tidy,
+                                three_grams_tidy,
+                                four_grams_tidy,
+                                five_grams_tidy,
+                                six_grams_tidy),
+                                idcol = TRUE)
+save(input_training, file = "input_training.RData")
+str(input_testing)
+
+
+
+
+f("I'd live and I'd")
+# she cried ... for
+# she cried for ... a
+# she cried for a ... character(0)
 
 ## Skipgrams
-toks <- tokens("insurgents killed in ongoing fighting")
-tokens_skipgrams(toks, n = 2, skip = 1, concatenator = "_")
-tokens_skipgrams(toks, n = 2, skip = 2, concatenator = "_")
+# Currently this is slow when you have more than 6 or 7 words in the input
+# because it is making all possible skip-gr,as/ so try to limit that.
+
+a <- NULL
+f <- function(a = NULL) {
+        toks <- tokens(a)
+        toks_list <- tokens_skipgrams(toks,
+                                      n = 1:length(toks[[1]]),
+                                      skip = 0:4,
+                                      concatenator = "_")
+        toks_list <- rev(toks_list[[1]])
+        last <- toks[[1]][length(toks[[1]])]
+        toks_list <- toks_list[grep(last, toks_list)]
+        for (i in 1:length(toks_list)) {
+                if (nrow(input[`n-1` == toks_list[i], ]) != 0) {
+                        #print(input[`n-1` == toks_list[i], n])
+                        #break()
+                        return(input[`n-1` == toks_list[i], n])
+                        break()
+                }
+        }
+}
+f("I never thought I'd")
+
+
+
+
+
+
+# Backoff model (double backoff)
+a <- NULL
+f <- function(a = NULL) {
+        b <- list(tokens(a)[[1]])
+        b <- stri_join_list(b, sep = "_", collapse = TRUE)
+        if (nrow(input[`n-1` == b, ]) != 0) {
+                c <- as.character(b)
+                c <- gsub(" ", "_", c)
+                print(input[`n-1` == c, ])
+                print("A")
+        }
+        if (nrow(input[`n-1` == b, ]) == 0) {
+                c <- list(tokens(a)[[1]][-1])
+                c <- stri_join_list(c, sep = "_", collapse = TRUE)
+                if (nrow(input[`n-1` == c, ]) != 0) {
+                        d <- as.character(c)
+                        d <- gsub(" ", "_", d)
+                        print(input[`n-1` == d, ])
+                        print("B")
+                }
+                if (nrow(input[`n-1` == c, ]) == 0) {
+                        d <- list(tokens(a)[[1]][-c(1, 2)])
+                        d <- stri_join_list(d, sep = "_", collapse = TRUE)
+                        if (nrow(input[`n-1` == d, ]) != 0) {
+                                e <- as.character(d)
+                                e <- gsub(" ", "_", e)
+                                print(input[`n-1` == e, ])
+                                print("C")
+                        }
+                        if (nrow(input[`n-1` == d, ]) == 0) {
+                                e <- list(tokens(a)[[1]][-c(1, 2, 3)])
+                                e <- stri_join_list(e, sep = "_", collapse = TRUE)
+                                print(input[`n-1` == e, ])
+                                print("D")
+                        }
+                }
+        }       
+}
 
 # table summary of our different data type
 table(us_corpus$documents$source)
@@ -216,8 +394,8 @@ sum(textstat_frequency(us_DFM)$frequency[1:9000])
 library("ggplot2")
 ggplot(textstat_frequency(us_DFM)[1:30, ], 
        aes(x = reorder(feature, frequency), y = frequency)) +
-       geom_point() + 
-       labs(x = NULL, y = "Frequency")
+        geom_point() + 
+        labs(x = NULL, y = "Frequency")
 
 # Find the maximum length (# of charcters) in each line
 max_char_blogs <- nchar(us_blogs[1])
@@ -478,7 +656,7 @@ for (i in 1:nrow(four_grams[1:10000, 1])){
         z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
         x <- rbind(x, z)
 }
-        
+
 for (i in 1:nrow(four_grams[1:10000, 1])){
         z <- unlist(strsplit(as.character(four_grams[i, 1]), split = "_"))[4]
         y <- rbind(y, z)
@@ -522,8 +700,6 @@ z <- as.character(z)
 str(z)
 
 
-
-
 as.character(zzz[3, 1])
 unlist(strsplit(as.character(zzz[i, 1]), split = "_"))[4]
 a <- strsplit(as.character(zzz[1, 1]), "_")[4]
@@ -533,5 +709,3 @@ length(zzz[, 1])
 unlist(strsplit(as.character(zzz[1, 1]), split = "_"))[4]
 
 str(zzz)
-
-
