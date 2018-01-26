@@ -1,32 +1,33 @@
 ---
-title: "Milestone Report"
+title: "n-gram Text Prediction Model"
 author: "Eric Thompson"
-date: "January 7, 2018"
+date: "January 2018"
 output: html_document
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+knitr::opts_chunk$set(root.dir = 'C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/')
 ```
 
 
 ### Introduction
 
-This is a milestone report for the Coursera Data Science Specialization's capstone 
-project. Our ultimate aim is to build a text prediction model.  To this point we
-have ingested the raw, original text files into corpus objects using the **quanteda** 
-package, done thorough exploratory analysis including line a word count summaries, 
-plots of most-frequent words and a variety of other interesting features of the data. 
-Additionally we have begun constructing an n-gram model for text prediction while 
-considering processing time and size.
+This reproducible report demonstrates how to build a text prediction model beginning with text files
+of several million blog posts, tweets and news articles.  We clean and tokenize the text and build an
+ngram text prediction algorithm.  We have built a Shiny app as our user interface, in which the user 
+enters any amount of text and then almost instantaneously receives a prediction for the next word. 
 
+Here is the GitHub repo containing a README and full R scripts for our Shiny app: 
+<https://github.com/etsafe11/text_prediction_model>
+
+Our Shiny app is deployed here: <https://etsafe11.shinyapps.io/text_prediction_model_11/>
 
 ### Data Ingestion
 
 We begin by ingesting three text files:
 
-1. a set of texts lines of blog posts
+1. a set of text lines of blog posts
 2. a set of text lines of  news articles
 3. a set of text lines of Tweets
 
@@ -34,7 +35,7 @@ For modeling purposes we will soon merge the three types of text lines into a si
 corpus, but first we create document-level variables to classify each line as either 
 blog, news or Twitter.
 
-```{r include = FALSE, cache = TRUE}
+```{r include = FALSE, cache = FALSE, eval = TRUE}
 library(dplyr)
 library(readr)
 library(rlang)
@@ -58,18 +59,19 @@ library(knitr)
 
 setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
 
+# You may need to right click the .RData file in the file folder and Open With RStudio
 load("table1.RData")
 load("table2.RData")
 load("table3.RData")
 load("table4.RData")
+load("table5.RData")
 load("us_DFM.RData")
 load("sample_us_DFM.RData")
-load("sample_us_corpus.RData")
+load("input_testing.RData")
+load("input_training.RData")
 ```
 
 ```{r eval = TRUE, cache = TRUE, include = TRUE}
-setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
-
 us_blogs <- read_lines("en_US.blogs.txt")
 us_news <- read_lines("en_US.news.txt")
 us_twitter <- read_lines("en_US.twitter.txt")
@@ -121,7 +123,6 @@ training_us_corpus <- corpus_subset(sample_us_corpus,
 
 testing_us_corpus <- corpus_subset(sample_us_corpus, 
                                    1:ndoc(sample_us_corpus) %in% 1000001:1300000)
-
 ```
 
 
@@ -130,7 +131,7 @@ testing_us_corpus <- corpus_subset(sample_us_corpus,
 #### Keywords-in-Context
 Below is a quick way to see a particular word in its various contexts.
 
-```{r include = TRUE, eval = TRUE}
+```{r include = TRUE, eval = FALSE, cache = TRUE}
 kwic(sample_us_corpus[1:25000], "terror")
 ```
 
@@ -141,7 +142,7 @@ In addition to our line counts, we want to count words.  Here we see there are o
 101 million different words in our original dataset.  Below is a table showing the
 most frequently-occuring word.  You can see that "the" appears over 4.7 million times.
 
-```{r include = TRUE, eval = TRUE}
+```{r include = TRUE, eval = FALSE}
 sum(textstat_frequency(us_DFM)$frequency)
 head(textstat_frequency(us_DFM))
 ```
@@ -151,20 +152,20 @@ many unique words does one need in a frequency-sorted dictionary to cover 50% of
 word instances in the merged corpus?  Below we see that the top 153 most-common words 
 represent about 50.8 million words, which is approximately 50% of our merged corpus.  
 
-```{r include = TRUE, eval = TRUE}
+```{r include = TRUE, eval = FALSE}
 sum(textstat_frequency(us_DFM)$frequency[1:153])
 ```
 
 Similarly, to cover 90% of the word instances in the corpus, one needs the top 9,000 
 most commonly-occurring words.
 
-```{r}
+```{r include  = TRUE, eval = FALSE}
 sum(textstat_frequency(us_DFM)$frequency[1:9000])
 ```
 
 Next we plot the 30 most frequent words:
 
-```{r include = TRUE, eval = TRUE}
+```{r include = TRUE, eval = FALSE}
 library(ggplot2)
 ggplot(textstat_frequency(us_DFM)[1:30, ], 
        aes(x = reorder(feature, frequency), y = frequency)) +
@@ -204,9 +205,9 @@ We can easily calculate the ratio of the word "love" to "hate" in the Twitter da
 length(grep("love", us_twitter)) / length(grep("hate", us_twitter)) 
 ```
 
-We can create a wordcloud of 500 randomly-sampled elements of our merged corpus. 
+We can create a wordcloud of 130 randomly-sampled elements of our merged corpus. 
 
-```{r}
+```{r include = TRUE, eval = FALSE}
 # Word Cloud
 set.seed(555)
 textplot_wordcloud(sample_us_DFM[1:130], 
@@ -224,41 +225,37 @@ n-grams will be foundational to our model.
 
 We first show that our merged dataset contains 925,854 different words, or "types".
 
-```{r include=TRUE, eval = TRUE}
+```{r include=TRUE, eval = FALSE}
 us_DFM@Dim[2]
 ```
 
 Below are the top 50 1-grams (single "types"):
 
-```{r eval = FALSE}
+```{r include = TRUE, eval = FALSE}
 table1 <- topfeatures(us_DFM, n = 50, decreasing = TRUE, scheme = "count")
 head(attr(table1,"names"), 50)
 ```
 
-```{r eval = FALSE}
+```{r include = TRUE, eval = FALSE}
 # Top 2-grams
 table2 <- textstat_collocations(sample_us_corpus, size = 2)
 table2 <- table2[order(table2$count, decreasing = TRUE), ]
+head(table2)
+``` 
 
+```{r include = TRUE, eval = FALSE}
 # Top 3-grams
 table3 <- textstat_collocations(sample_us_corpus, size = 3)
 table3 <- table3[order(table3$count, decreasing = TRUE), ]
+head(table3)
+``` 
 
-# Top 4-grams
+```{r include = TRUE, eval = FALSE}
+# Top 3-grams
 table4 <- textstat_collocations(sample_us_corpus, size = 4)
 table4 <- table4[order(table4$count, decreasing = TRUE), ]
-```
-
-
-```{r, eval = TRUE}
-# Most common 2-grams
-head(table2)
-# Most common 3-grams
-head(table3)
-# Most common 4-grams
 head(table4)
-```
-
+``` 
 
 ### Creating the input dataset
 
@@ -286,7 +283,7 @@ two_temp <- tokens_ngrams(training_us_tokens, n = 2L, skip = 0L, concatenator = 
 two_temp <- as.data.table(table(unlist(two_temp)))
 two_temp <- two_temp[order(N, decreasing = TRUE)]
 save(two_temp, file = "two_temp.RData")
-two_temp <- two_temp[1:5000, ]
+two_temp <- two_temp[1:500000, ]
 
 x <- NULL
 y <- NULL
@@ -307,14 +304,14 @@ for (i in 1:nrow(two_temp[, 1])) {
 two_grams_tidy <- data.table(x, y, two_temp$N)
 names(two_grams_tidy) <- c("n-1", "n", "count")
 two_grams_tidy <- two_grams_tidy[!duplicated(two_grams_tidy[, 1]), ]
-save(two_grams_tidy, file = "two_grams_tidy_5000.RData")
+save(two_grams_tidy, file = "two_grams_tidy_500000.RData")
 
 # Make 3-grams frequency table
 three_temp <- tokens_ngrams(training_us_tokens, n = 3L, skip = 0L, concatenator = "_")
 three_temp <- as.data.table(table(unlist(three_temp)))
 three_temp <- three_temp[order(N, decreasing = TRUE)]
 save(three_temp, file = "three_temp.RData")
-three_temp <- three_temp[1:5000, ]
+three_temp <- three_temp[1:400000, ]
 
 x <- NULL
 y <- NULL
@@ -335,14 +332,14 @@ for (i in 1:nrow(three_temp[, 1])) {
 three_grams_tidy <- data.table(x, y, three_temp$N)
 names(three_grams_tidy) <- c("n-1", "n", "count")
 three_grams_tidy <- three_grams_tidy[!duplicated(three_grams_tidy[, 1]), ]
-save(three_grams_tidy, file = "three_grams_tidy_5000.RData")
+save(three_grams_tidy, file = "three_grams_tidy_400000.RData")
 
 # Make 4-grams frequency table
 four_temp <- tokens_ngrams(training_us_tokens, n = 4L, skip = 0L, concatenator = "_")
 four_temp <- as.data.table(table(unlist(four_temp)))
 four_temp <- four_temp[order(N, decreasing = TRUE)]
 save(four_temp, file = "four_temp.RData")
-four_temp <- four_temp[1:5000, ]
+four_temp <- four_temp[1:300000, ]
 
 x <- NULL
 y <- NULL
@@ -363,7 +360,7 @@ for (i in 1:nrow(four_temp[, 1])) {
 four_grams_tidy <- data.table(x, y, four_temp$N)
 names(four_grams_tidy) <- c("n-1", "n", "count")
 four_grams_tidy <- four_grams_tidy[!duplicated(four_grams_tidy[, 1]), ]
-save(four_grams_tidy, file = "four_grams_tidy_5000.RData")
+save(four_grams_tidy, file = "four_grams_tidy_300000.RData")
 
 # Make 5-grams frequency table
 five_temp <- tokens_ngrams(training_us_tokens, n = 5L, skip = 0L, concatenator = "_")
@@ -371,7 +368,7 @@ five_temp <- as.data.table(table(unlist(five_temp)))
 head(five_temp)
 five_temp <- five_temp[order(N, decreasing = TRUE)]
 save(five_temp, file = "five_temp.RData")
-five_temp <- five_temp[1:5000, ]
+five_temp <- five_temp[1:300000, ]
 
 x <- NULL
 y <- NULL
@@ -392,7 +389,7 @@ for (i in 1:nrow(five_temp[, 1])) {
 five_grams_tidy <- data.table(x, y, five_temp$N)
 names(five_grams_tidy) <- c("n-1", "n", "count")
 five_grams_tidy <- five_grams_tidy[!duplicated(five_grams_tidy[, 1]), ]
-save(five_grams_tidy, file = "five_grams_tidy_5000.RData")
+save(five_grams_tidy, file = "five_grams_tidy_300000.RData")
 
 
 # Make 6-grams frequency table
@@ -400,7 +397,7 @@ six_temp <- tokens_ngrams(training_us_tokens, n = 6L, skip = 0L, concatenator = 
 six_temp <- as.data.table(table(unlist(six_temp)))
 six_temp <- six_temp[order(N, decreasing = TRUE)]
 save(six_temp, file = "six_temp.RData")
-six_temp <- six_temp[1:5000, ]
+six_temp <- six_temp[1:300000, ]
 
 x <- NULL
 y <- NULL
@@ -421,7 +418,7 @@ for (i in 1:nrow(six_temp[, 1])) {
 six_grams_tidy <- data.table(x, y, six_temp$N)
 names(six_grams_tidy) <- c("n-1", "n", "count")
 six_grams_tidy <- six_grams_tidy[!duplicated(six_grams_tidy[, 1]), ]
-save(six_grams_tidy, file = "six_grams_tidy_5000.RData")
+save(six_grams_tidy, file = "six_grams_tidy_300000.RData")
 
 # Model Input dataset
 input_training <- rbindlist(l = list(two_grams_tidy,
@@ -436,7 +433,7 @@ View(input_training)
 This code will create the dataset that will be used to create our first text 
 prediction model, a simple model based on n-grams.  
 
-### Testing Set & Accuracy
+### Testing Set
 
 In a very simlar manner, we build a testing set to evaluate our model's accuracy.  
 
@@ -591,20 +588,9 @@ input_testing <- rbindlist(l = list(two_grams_tidy_testing,
                                     four_grams_tidy_testing,
                                     five_grams_tidy_testing,
                                     six_grams_tidy_testing),
-                           idcol = TRUE)
+                                    idcol = TRUE)
 
-# Merge testing and training sets
-merged_dt <- merge(input_testing, input_training, by = "n-1", all.x = TRUE)
-
-# Model accuracy is approximately 5.9%
-nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)
-
-# 171,476 words in Second Edition of Oxford English Dictionary
-# so our model is 10,000 times better than a random guess
-(nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)) / (1/171476)
-100/171476
 ```
-
 
 ### n-gram Backoff Model
 
@@ -647,4 +633,23 @@ f <- function(a = NULL) {
                 }
         }
 }
+```
+
+### Accuracy
+
+Next we evaluate accuracy.
+
+```{r include = TRUE, eval = TRUE}
+# Merge testing and training sets
+merged_dt <- merge(input_testing, input_training, by = "n-1", all.x = TRUE)
+
+# Model accuracy is approximately 5.9%
+nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)
+```
+
+
+```{r include = TRUE, eval = TRUE}
+# 171,476 words in Second Edition of Oxford English Dictionary
+# so our model is 10,000 times better than a random guess
+(nrow(merged_dt[n.y == n.x]) / nrow(merged_dt)) / (1/171476)
 ```
