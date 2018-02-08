@@ -1,10 +1,6 @@
-#TESTING CHANGES ON GIT
-# more testing
+
 setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
-# lets test here
-# testing once more
-# more testing
-# more testing
+
 library(dplyr)
 library(readr)
 library(rlang)
