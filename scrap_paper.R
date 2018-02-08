@@ -2,7 +2,7 @@
 # more testing
 setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
 # lets test here
-
+# testing once more
 # more testing
 # more testing
 library(dplyr)
@@ -374,7 +374,7 @@ f <- function(a = NULL) {
                                 print("D")
                         }
                 }
-        }       
+        } Â Â Â Â Â Â 
 }
 
 # table summary of our different data type
@@ -537,8 +537,8 @@ tokens_ngrams(toks, n = 2)
 
 # How to read line-by-line... VERY IMPORTANT to close connection.
 con <- file("en_US.blogs.txt", "r") 
-readLines(con, 5)   # Read the first 5 lines
-close(con)    # Close the connection
+readLines(con, 5) Â Â # Read the first 5 lines
+close(con) Â Â Â # Close the connection
 
 # Tidytext package
 # Word frequency table... using SAMPLE dataset to improve computation times
@@ -582,20 +582,20 @@ get.nextwords(ng)
 
 #Creating a dictionary
 #myDict <- dictionary(list(terror = c("terrorism", "terrorists", "threat"),
-#                          economy = c("jobs", "business", "grow", "work")))
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â economy = c("jobs", "business", "grow", "work")))
 #byPresMat <- dfm(recentCorpus, dictionary = myDict)
 #byPresMat
 
 # Similarties between texts
 #presDfm <- dfm(corpus_subset(data_corpus_inaugural, Year > 1980), 
-#               remove = stopwords("english"), stem = TRUE, remove_punct = TRUE)
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â remove = stopwords("english"), stem = TRUE, remove_punct = TRUE)
 #obamaSimil <- textstat_simil(presDfm, c("2009-Obama" , "2013-Obama"), 
-#                             margin = "documents", method = "cosine")
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â margin = "documents", method = "cosine")
 
 # Dendrograms
 # presDfm <- dfm(corpus_subset(data_corpus_SOTU, Date > as.Date("1980-01-01")), 
-#               stem = TRUE, remove_punct = TRUE,
-#               remove = stopwords("english"))
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â stem = TRUE, remove_punct = TRUE,
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â remove = stopwords("english"))
 #presDfm <- dfm_trim(presDfm, min_count = 5, min_docfreq = 3)
 ## hierarchical clustering - get distances on normalized dfm
 #presDistMat <- textstat_dist(dfm_weight(presDfm, "relfreq"))
@@ -608,13 +608,13 @@ get.nextwords(ng)
 
 #Topic model
 # trimmed_sample_us_DFM <- dfm_trim(sample_us_DFM, min_count = 5, 
-#                                  # max_docfreq = 10, 
-#                                  verbose = TRUE)
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â # max_docfreq = 10, 
+# Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â verbose = TRUE)
 #trimmed_sample_us_DFM
 
 #if (require(topicmodels)) {
-#        myLDAfit20 <- LDA(convert(trimmed_sample_us_DFM, to = "topicmodels"), k = 20)
-#        get_terms(myLDAfit20, 5)
+# Â Â Â Â Â Â Â myLDAfit20 <- LDA(convert(trimmed_sample_us_DFM, to = "topicmodels"), k = 20)
+# Â Â Â Â Â Â Â get_terms(myLDAfit20, 5)
 #}
 
 
