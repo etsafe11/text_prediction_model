@@ -20,7 +20,8 @@ function(input, output) {
                 for (i in 1:length(toks_list)) {
                         if (nrow(input_training[`n-1` == toks_list[i], ]) != 0) {
                                 x <- c(x, input_training[`n-1` == toks_list[i], n])
-                                return(c(x[1], "<>", x[2], "<>", x[3], "<>", x[4], "<>", x[5]))
+                                return(c("Most likely next words:\n", 
+                                         x[1], "\n", x[2], "\n", x[3], "\n", x[4], "\n", x[5]))
                         }
                 }
         })
