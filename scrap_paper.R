@@ -1,5 +1,4 @@
-#test 6
-setwd("C:/Users/v-eritho/Desktop/RScripts/capstone_project/data/")
+setwd("C:/Users/etsaf/RScripts/RScripts/capstone_project/data/")
 
 library(dplyr)
 library(readr)
@@ -18,7 +17,6 @@ library(NLP)
 library(tm)
 library(SnowballC)
 library(slam)
-library(cldr)
 library(sqldf)
 library(data.table)
 library(stringi)
@@ -82,12 +80,11 @@ two_temp <- tokens_ngrams(training_us_tokens, n = 2L, skip = 0L, concatenator = 
 two_temp <- as.data.table(table(unlist(two_temp)))
 two_temp <- two_temp[order(N, decreasing = TRUE)]
 save(two_temp, file = "two_temp.RData")
-two_temp <- two_temp[1:50, ]
-
+two_temp <- two_temp[1:750000, ]
+str(two_temp)
 x <- NULL
 y <- NULL
 z <- NULL
-two_grams_tidy <- NULL
 
 for (i in 1:nrow(two_temp[, 1])) {
         z <- list(strsplit(as.character(two_temp[i, 1]), split = "_")[[1]][1])
@@ -107,18 +104,19 @@ two_grams_tidy_df1 <-as.data.frame(two_grams_tidy)
 
 two_grams_tidy_df2 <- two_grams_tidy_df1 %>%
         group_by(`n-1`) %>%
-        arrange(desc(count), .by_group = TRUE) %>%
+        arrange(`n-1`, desc(count)) %>%
         slice(1:5) %>%
         ungroup 
+
 two_grams_tidy <- as.data.table(two_grams_tidy_df2)
-save(two_grams_tidy, file = "two_grams_tidy_3000.RData")
+save(two_grams_tidy, file = "two_grams_tidy_750000.RData")
 
 # Make 3-grams frequency table
 three_temp <- tokens_ngrams(training_us_tokens, n = 3L, skip = 0L, concatenator = "_")
 three_temp <- as.data.table(table(unlist(three_temp)))
 three_temp <- three_temp[order(N, decreasing = TRUE)]
 save(three_temp, file = "three_temp.RData")
-three_temp <- three_temp[1:3000, ]
+three_temp <- three_temp[1:750000, ]
 
 x <- NULL
 y <- NULL
@@ -143,18 +141,19 @@ three_grams_tidy_df1 <-as.data.frame(three_grams_tidy)
 
 three_grams_tidy_df2 <- three_grams_tidy_df1 %>%
         group_by(`n-1`) %>%
-        arrange(desc(count), .by_group = TRUE) %>%
+        arrange(`n-1`, desc(count)) %>%
         slice(1:5) %>%
         ungroup 
+
 three_grams_tidy <- as.data.table(three_grams_tidy_df2)
-save(three_grams_tidy, file = "three_grams_tidy_3000.RData")
+save(three_grams_tidy, file = "three_grams_tidy_750000.RData")
 
 # Make 4-grams frequency table
 four_temp <- tokens_ngrams(training_us_tokens, n = 4L, skip = 0L, concatenator = "_")
 four_temp <- as.data.table(table(unlist(four_temp)))
 four_temp <- four_temp[order(N, decreasing = TRUE)]
 save(four_temp, file = "four_temp.RData")
-four_temp <- four_temp[1:3000, ]
+four_temp <- four_temp[1:750000, ]
 
 x <- NULL
 y <- NULL
@@ -179,19 +178,19 @@ four_grams_tidy_df1 <-as.data.frame(four_grams_tidy)
 
 four_grams_tidy_df2 <- four_grams_tidy_df1 %>%
         group_by(`n-1`) %>%
-        arrange(desc(count), .by_group = TRUE) %>%
+        arrange(`n-1`, desc(count)) %>%
         slice(1:5) %>%
         ungroup 
+
 four_grams_tidy <- as.data.table(four_grams_tidy_df2)
-save(four_grams_tidy, file = "four_grams_tidy_3000.RData")
+save(four_grams_tidy, file = "four_grams_tidy_750000.RData")
 
 # Make 5-grams frequency table
 five_temp <- tokens_ngrams(training_us_tokens, n = 5L, skip = 0L, concatenator = "_")
 five_temp <- as.data.table(table(unlist(five_temp)))
-head(five_temp)
 five_temp <- five_temp[order(N, decreasing = TRUE)]
 save(five_temp, file = "five_temp.RData")
-five_temp <- five_temp[1:3000, ]
+five_temp <- five_temp[1:750000, ]
 
 x <- NULL
 y <- NULL
@@ -216,11 +215,12 @@ five_grams_tidy_df1 <-as.data.frame(five_grams_tidy)
 
 five_grams_tidy_df2 <- five_grams_tidy_df1 %>%
         group_by(`n-1`) %>%
-        arrange(desc(count), .by_group = TRUE) %>%
+        arrange(`n-1`, desc(count)) %>%
         slice(1:5) %>%
         ungroup 
+
 five_grams_tidy <- as.data.table(five_grams_tidy_df2)
-save(five_grams_tidy, file = "five_grams_tidy_3000.RData")
+save(five_grams_tidy, file = "five_grams_tidy_750000.RData")
 
 
 # Make 6-grams frequency table
@@ -228,7 +228,7 @@ six_temp <- tokens_ngrams(training_us_tokens, n = 6L, skip = 0L, concatenator = 
 six_temp <- as.data.table(table(unlist(six_temp)))
 six_temp <- six_temp[order(N, decreasing = TRUE)]
 save(six_temp, file = "six_temp.RData")
-six_temp <- six_temp[1:3000, ]
+six_temp <- six_temp[1:750000, ]
 
 x <- NULL
 y <- NULL
@@ -253,12 +253,14 @@ six_grams_tidy_df1 <-as.data.frame(six_grams_tidy)
 
 six_grams_tidy_df2 <- six_grams_tidy_df1 %>%
         group_by(`n-1`) %>%
-        arrange(desc(count), .by_group = TRUE) %>%
+        arrange(`n-1`, desc(count)) %>%
         slice(1:5) %>%
         ungroup 
-six_grams_tidy <- as.data.table(six_grams_tidy_df2)
-save(six_grams_tidy, file = "six_grams_tidy_3000.RData")
 
+six_grams_tidy <- as.data.table(six_grams_tidy_df2)
+save(six_grams_tidy, file = "six_grams_tidy_750000.RData")
+
+str(six_grams_tidy)
 # Model Input dataset
 input_training <- rbindlist(l = list(two_grams_tidy,
                                 three_grams_tidy,
@@ -267,25 +269,11 @@ input_training <- rbindlist(l = list(two_grams_tidy,
                                 six_grams_tidy),
                                 idcol = TRUE)
 
-input_training_3000 <- rbindlist(l = list(two_grams_tidy,
-                                          three_grams_tidy,
-                                          four_grams_tidy,
-                                          five_grams_tidy,
-                                          six_grams_tidy),
-                                 idcol = TRUE)
-save(input_training_3000, file = "input_training_3000.RData")
+save(input_training, file = "input_training_750000.RData")
 
 View(head(input_training, 5000))
 
 f("I'd live and I'd")
-# she cried ... for
-# she cried for ... a
-# she cried for a ... character(0)
-
-## Skipgrams
-# Currently this is slow when you have more than 6 or 7 words in the input
-# because it is making all possible skip-gr,as/ so try to limit that.
-
 
 # Model for returning FIVE results 
 a <- NULL
@@ -565,219 +553,5 @@ str <- "I like to go to the dog park"
 ng <- ngram(str)
 babble(ng, genlen=2)
 get.nextwords(ng)
-
-
-###############################################################################
-
-
-
-
-
-
-
-
-#Creating a dictionary
-#myDict <- dictionary(list(terror = c("terrorism", "terrorists", "threat"),
-#                          economy = c("jobs", "business", "grow", "work")))
-#byPresMat <- dfm(recentCorpus, dictionary = myDict)
-#byPresMat
-
-# Similarties between texts
-#presDfm <- dfm(corpus_subset(data_corpus_inaugural, Year > 1980), 
-#               remove = stopwords("english"), stem = TRUE, remove_punct = TRUE)
-#obamaSimil <- textstat_simil(presDfm, c("2009-Obama" , "2013-Obama"), 
-#                             margin = "documents", method = "cosine")
-
-# Dendrograms
-# presDfm <- dfm(corpus_subset(data_corpus_SOTU, Date > as.Date("1980-01-01")), 
-#               stem = TRUE, remove_punct = TRUE,
-#               remove = stopwords("english"))
-#presDfm <- dfm_trim(presDfm, min_count = 5, min_docfreq = 3)
-## hierarchical clustering - get distances on normalized dfm
-#presDistMat <- textstat_dist(dfm_weight(presDfm, "relfreq"))
-## hierarchical clustering the distance object
-#presCluster <- hclust(presDistMat)
-## label with document names
-#presCluster$labels <- docnames(presDfm)
-## plot as a dendrogram
-#plot(presCluster, xlab = "", sub = "", main = "Euclidean Distance on Normalized Token Frequency")
-
-#Topic model
-# trimmed_sample_us_DFM <- dfm_trim(sample_us_DFM, min_count = 5, 
-#                                  # max_docfreq = 10, 
-#                                  verbose = TRUE)
-#trimmed_sample_us_DFM
-
-#if (require(topicmodels)) {
-#        myLDAfit20 <- LDA(convert(trimmed_sample_us_DFM, to = "topicmodels"), k = 20)
-#        get_terms(myLDAfit20, 5)
-#}
-
-
-
-
-
-# Old way I was making n-gram tables; VERY slow, took like 8 hours for only 5% sample
-
-# Top 2-grams
-table2 <- textstat_collocations(us_corpus, size = 2)
-table2 <- table2[order(table2$count, decreasing = TRUE), ]
-head(table2)
-
-# Top 3-grams
-table3 <- textstat_collocations(us_corpus, size = 3)
-table3 <- table3[order(table3$count, decreasing = TRUE), ]
-head(table3)
-
-# Top 4-grams
-table4 <- textstat_collocations(us_corpus, size = 4)
-table4 <- table4[order(table4$count, decreasing = TRUE), ]
-
-# Top 5-grams
-table5 <- textstat_collocations(us_corpus, size = 5)
-table5 <- table5[order(table5$count, decreasing = TRUE), ]
-head(table5)
-
-# CREATE DATASET WITH 3 COLUMNS: 
-# 1) n-1 words in the n-gram, 
-# 2) a prediction that is the last word, 
-# 3) and a count variable for the frequency of occurrence of this n-gram (ordered)
-
-# Two-grams
-temp2 <- data.table()
-temp3 <- NULL
-
-for (i in 1:length(table2$collocation[1:50])) {
-        temp2 <- rbind(temp2, strsplit(table3$collocation[[i]][1:50], " ")[[1]][2])
-        temp3 <- rbind(temp3, strsplit(table3$collocation[[i]][1:50], " ")[[1]][1])
-}
-
-two_grams <- data.table(temp3, temp2, table2$count[1:50])
-two_grams <- two_grams[!duplicated(two_grams[, 1], fromLast = FALSE), ]
-two_grams
-
-# Three-grams
-temp2 <- data.table()
-temp3 <- rbind(c(NULL, NULL))
-
-for (i in 1:length(table3$collocation[1:50])) {
-        temp2 <- rbind(temp2, strsplit(table3$collocation[[i]][1:50], " ")[[1]][3])
-        temp3 <- rbind(temp3, strsplit(table3$collocation[[i]][1:50], " ")[[1]][1:2])
-}
-
-three_grams <- data.table(temp3, temp2, table3$count[1:50])
-three_grams <- three_grams[!duplicated(three_grams[, 1:2], fromLast = FALSE), ]
-three_grams
-
-# Four-grams
-temp2 <- data.table()
-temp3 <- rbind(c(NULL, NULL, NULL))
-
-for (i in 1:length(table4$collocation[1:50])) {
-        temp2 <- rbind(temp2, strsplit(table4$collocation[[i]][1:50], " ")[[1]][4])
-        temp3 <- rbind(temp3, strsplit(table4$collocation[[i]][1:50], " ")[[1]][1:3])
-}
-
-four_grams <- data.table(temp3, temp2, table4$count[1:50])
-four_grams <- four_grams[!duplicated(four_grams[, 1:3], fromLast = FALSE), ]
-four_grams
-
-# Five-grams
-temp2 <- data.table()
-temp3 <- rbind(c(NULL, NULL, NULL, NULL))
-
-for (i in 1:length(table5$collocation[1:50])) {
-        temp2 <- rbind(temp2, strsplit(table5$collocation[[i]][1:50], " ")[[1]][5])
-        temp3 <- rbind(temp3, strsplit(table5$collocation[[i]][1:50], " ")[[1]][1:4])
-}
-
-five_grams <- data.table(temp3, temp2, table5$count[1:50])
-five_grams <- five_grams[!duplicated(five_grams[, 1:4], fromLast = FALSE), ]
-five_grams
-
-
-two_grams
-three_grams
-four_grams
-five_grams
-
-
-#QUIZ
-load("four_grams.RData")
-zzz <- head(four_grams[grep("^you_must_be", four_grams$V1), ], 100)
-head(zzz)
-
-#*********************************************
-# Take four_grams table (zzz) into a 5, columns: 3 input, 1 prediction, and one count
-x <- NULL
-y <- NULL
-z <- NULL
-four_gram_tidy <- NULL
-
-for (i in 1:nrow(four_grams[1:10000, 1])){
-        z <- list(strsplit(as.character(four_grams[i, 1]), split = "_")[[1]][1:3])
-        z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
-        x <- rbind(x, z)
-}
-
-for (i in 1:nrow(four_grams[1:10000, 1])){
-        z <- unlist(strsplit(as.character(four_grams[i, 1]), split = "_"))[4]
-        y <- rbind(y, z)
-}
-
-table1 <- data.table(x, y, four_grams[1:10000, ]$N)
-names(table1) <- c("n-1", "n", "count")
-four_gram_tidy <- rbind(four_gram_tidy, table1)
-four_grams <- four_grams[!duplicated(four_grams[, 1]), ]
-head(four_gram_tidy)
-#*********************************************
-z <- list(strsplit(as.character(four_grams[i, 1]), split = "_")[[1]][1:3])
-z <- strsplit(stri_join_list(z, sep = "_", collapse = TRUE), " ")[[1]]
-z
-
-list(strsplit(as.character(zzz[i, 1]), split = "_")[[1]][1:3])
-
-str(z)
-strsplit(as.character(zzz[i, 1]), split = "_")[[1]][1:3]
-stri_join_list(z, sep = " ", collapse = TRUE)
-
-stri_join_list(stri_extract_all_words(c("Lorem ipsum dolor sit amet.",
-                                        "You're gonna get away with this.")), sep=", ")
-
-input <- "i love to"
-install.packages("stringi")
-library(stringi)
-
-stri_join_list(strsplit(as.character(input), split = " "), sep = " ", collapse = TRUE)
-
-strsplit(as.character(input), split = " ")
-
-
-stri_paste(letters, collapse='')
-
-
-
-z <- unlist(strsplit(as.character(zzz[i, 1]), split = "_"))[1:3]
-z <- as.character(z)
-
-str(z)
-
-
-as.character(zzz[3, 1])
-unlist(strsplit(as.character(zzz[i, 1]), split = "_"))[4]
-a <- strsplit(as.character(zzz[1, 1]), "_")[4]
-a
-zzz[1, 1]
-length(zzz[, 1])
-unlist(strsplit(as.character(zzz[1, 1]), split = "_"))[4]
-
-str(zzz)
-
-
-
-
-
-
-
 
 
