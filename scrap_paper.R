@@ -1,3 +1,5 @@
+# Building an n-gram text prediction model from scratch.
+
 setwd("C:/Users/etsaf/RScripts/RScripts/capstone_project/data/")
 
 library(dplyr)
