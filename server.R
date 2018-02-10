@@ -20,7 +20,7 @@ function(input, output) {
                 for (i in 1:length(toks_list)) {
                         if (nrow(input_training[`n-1` == toks_list[i], ]) != 0) {
                                 x <- c(x, input_training[`n-1` == toks_list[i], n])
-                                return(c(x[1], " | ", x[2], " | ", x[3], " | ", x[4], " | ", x[5]))
+                                return(c(x[1], "<>", x[2], "<>", x[3], "<>", x[4], "<>", x[5]))
                         }
                 }
         })
