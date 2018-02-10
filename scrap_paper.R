@@ -1,6 +1,6 @@
 # Building an n-gram text prediction model from scratch.
 
-setwd("C:/Users/etsaf/RScripts/RScripts/capstone_project/data/")
+setwd("C:/Users/etsaf/RScripts/REPO_text_model/text_prediction_model/")
 
 library(dplyr)
 library(readr)
@@ -290,7 +290,13 @@ f <- function(a = NULL) {
         toks_list <- toks_list[grep(last, toks_list)]
         for (i in 1:length(toks_list)) {
                 if (nrow(input_training[`n-1` == toks_list[i], ]) != 0) {
-                        return(input_training[`n-1` == toks_list[i], n])
+                        x <- c(x, input_training[`n-1` == toks_list[i], n])
+                        return(c("Most likely next words:\n", 
+                                 x[1], "\n", 
+                                 (if(is.na(x[2]) == TRUE) { "" } else {x[2]}), "\n", 
+                                 (if(is.na(x[3]) == TRUE) { "" } else {x[3]}), "\n", 
+                                 (if(is.na(x[4]) == TRUE) { "" } else {x[4]}), "\n", 
+                                 (if(is.na(x[5]) == TRUE) { "" } else {x[5]}), "\n"))
                 }
         }
 }
