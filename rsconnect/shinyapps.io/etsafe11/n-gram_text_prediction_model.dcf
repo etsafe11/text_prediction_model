@@ -1,0 +1,11 @@
+name: n-gram_text_prediction_model
+title: n-gram text prediction model
+account: etsafe11
+server: shinyapps.io
+appId: 277386
+bundleId: 1216670
+url: https://etsafe11.shinyapps.io/n-gram_text_prediction_model/
+when: 1518284856.74781
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: intial_capstone_script.R|milestone_report.Rmd|presentation.Rpres|README.md|reproducible_report.Rmd|scrap_paper.R|testing_set.R

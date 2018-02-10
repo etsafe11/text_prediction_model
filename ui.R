@@ -1,8 +1,9 @@
 library(shiny)
 library(quanteda)
-#load("input_training.RData")
+load("input_training_750000.RData")
 
 fluidPage(
-        textInput("txt", "Enter text"),
+        titlePanel("n-gram Text Prediction Model"),
+        textInput("txt", "Enter text:"),
         verbatimTextOutput("m1pred", placeholder = TRUE)
 )
