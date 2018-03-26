@@ -1,6 +1,6 @@
 # Building an n-gram text prediction model from scratch.
 
-setwd("C:/Users/etsaf/RScripts/REPO_text_model/text_prediction_model/")
+setwd("C:/Users/v-eritho/Desktop/text_prediction_model")
 
 library(dplyr)
 library(readr)
@@ -366,7 +366,7 @@ f <- function(a = NULL) {
                                 print("D")
                         }
                 }
-        }       
+        } Â Â Â Â Â Â 
 }
 
 # table summary of our different data type
@@ -529,8 +529,8 @@ tokens_ngrams(toks, n = 2)
 
 # How to read line-by-line... VERY IMPORTANT to close connection.
 con <- file("en_US.blogs.txt", "r") 
-readLines(con, 5)   # Read the first 5 lines
-close(con)    # Close the connection
+readLines(con, 5)# Read the first 5 lines
+close(con) # Close the connection
 
 # Tidytext package
 # Word frequency table... using SAMPLE dataset to improve computation times
@@ -561,5 +561,4 @@ str <- "I like to go to the dog park"
 ng <- ngram(str)
 babble(ng, genlen=2)
 get.nextwords(ng)
-
 
