@@ -157,6 +157,104 @@ input_testing <- rbindlist(l = list(two_grams_tidy_testing,
                                 six_grams_tidy_testing),
                                 idcol = TRUE)
 
+head(four_grams_tidy_testing)
+
+six_grams_tidy_testing[4:6, ]
+
+
+y <- 0
+
+for (k in 1:nrow(six_grams_tidy_testing[1:30, ])) {
+        #toks <- tokens(six_grams_tidy_testing[4,]$`n-1`, concatenator = "_")
+        toks <- stri_split_fixed(six_grams_tidy_testing[k, ]$`n-1`, pattern = "_")
+        toks <- tail(unlist(toks), 8)
+        toks_list <- tokens_skipgrams(toks,
+                                      n = 1:length(toks),
+                                      skip = 0:4,
+                                      concatenator = "_")
+        toks_list <- rev(toks_list)
+        last <- toks[length(toks)]
+        toks_list <- toks_list[grep(last, toks_list)]
+        
+        x <- NULL
+
+        for (i in 1:length(toks_list)) {
+                for(j in 1:length(input_training)) {
+                        if (nrow(input_training[which(input_training$`n-1` == toks_list[i]), ]) != 0) {
+                                if(six_grams_tidy_testing[k, ]$n %in% 
+                                        input_training[which(input_training$`n-1` == toks_list[i]), ]$n) {
+                                        
+                                        x <- c(x, TRUE)  
+                                }
+                                else {                                        
+                                        x <- c(x, FALSE)    
+                                }
+                                break
+                        }
+                        break
+                }
+        }
+        if(sum(x) > 0) { y <- y + 1 }
+}
+
+y
+
+
+# test
+
+
+
+
+
+
+for (k in 1:nrow(six_grams_tidy_testing[1:30, ])) {
+        #toks <- tokens(six_grams_tidy_testing[4,]$`n-1`, concatenator = "_")
+        toks <- stri_split_fixed(six_grams_tidy_testing[k, ]$`n-1`, pattern = "_")
+        toks <- tail(unlist(toks), 8)
+        toks_list <- tokens_skipgrams(toks,
+                                      n = 1:length(toks),
+                                      skip = 0:4,
+                                      concatenator = "_")
+        toks_list <- rev(toks_list)
+        last <- toks[length(toks)]
+        toks_list <- toks_list[grep(last, toks_list)]
+
+        x <- NULL
+        y <- vector(length = 30)
+        for (i in 1:length(toks_list)) {
+                for(j in 1:length(input_training)) {
+                        if (nrow(input_training[which(input_training$`n-1` == toks_list[i]), ]) != 0) {
+                                if(six_grams_tidy_testing[k, ]$n %in% 
+                                    input_training[which(input_training$`n-1` == toks_list[i]), ]$n) {
+                                        x <- c(x, TRUE)    
+                                }
+                                else {                                        
+                                        x <- c(x, FALSE)    
+                                }
+                                #print(input_training[which(input_training$`n-1` == toks_list[i]), ])
+                                break
+                        }
+                }
+        }
+        print(sum(x))
+}
+
+
+str(six_grams_tidy_testing)
+
+# Convert to df so next step works
+input_training <- as.data.frame(input_training)
+input_testing <- as.data.frame(input_testing)
+
+# Create new columns which simply concatentates the n-1 and n columns (sep by underscore)
+input_training$new_col <- do.call(paste, c(input_training[c("n-1", "n")], sep = "_"))
+input_testing$new_col <- do.call(paste, c(input_testing[c("n-1", "n")], sep = "_"))
+
+# Model has 11.3% accuracy
+sum(input_testing$new_col %in% input_training$new_col) / 250000
+
+
+# Model accuracy for version 1.0 (returning one result only)
 # Merge testing and training sets
 merged_dt <- merge(input_testing, input_training, by = "n-1", all.x = TRUE)
 
