@@ -23,7 +23,7 @@ library(sqldf)
 library(data.table)
 library(stringi)
 library(shiny)
-#testdsfsdgs
+
 # The below data.table objects are inputs to our model.
 # To save many hours of processing time, load them from local directory.
 # load("two_grams_tidy_500000.RData")
