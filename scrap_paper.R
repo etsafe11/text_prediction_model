@@ -23,7 +23,7 @@ library(sqldf)
 library(data.table)
 library(stringi)
 library(shiny)
-
+#testdsfsdgs
 # The below data.table objects are inputs to our model.
 # To save many hours of processing time, load them from local directory.
 # load("two_grams_tidy_500000.RData")
@@ -31,9 +31,7 @@ library(shiny)
 # load("four_grams_tidy_300000.RData")
 # load("five_grams_tidy_300000.RData")
 # load("six_grams_tidy_300000.RData")
-load("sample_us_corpus.RData")
-load("training_us_corpus.RData")
-load("testing_us_corpus.RData")
+load("input_training_750000.RData")
 
 #us_blogs <- readtext("en_US.blogs.txt", text_field = 1)
 us_blogs <- read_lines("en_US.blogs.txt")
