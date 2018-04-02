@@ -149,22 +149,22 @@ six_grams_tidy_testing <- data.table(x, y)
 names(six_grams_tidy_testing) <- c("n-1", "n")
 save(six_grams_tidy_testing, file = "six_grams_tidy_testing_50000.RData")
 
+
+# We want to evaluate two-six gram accuracy independently so we don't
+# use this part:
 # Model Input dataset
-input_testing <- rbindlist(l = list(two_grams_tidy_testing,
-                                three_grams_tidy_testing,
-                                four_grams_tidy_testing,
-                                five_grams_tidy_testing,
-                                six_grams_tidy_testing),
-                                idcol = TRUE)
+# input_testing <- rbindlist(l = list(two_grams_tidy_testing,
+#                                three_grams_tidy_testing,
+#                                four_grams_tidy_testing,
+#                                five_grams_tidy_testing,
+#                                six_grams_tidy_testing),
+#                                idcol = TRUE)
 
-head(four_grams_tidy_testing)
-
-six_grams_tidy_testing[4:6, ]
 
 
 y <- 0
 
-for (k in 1:nrow(six_grams_tidy_testing[1:30, ])) {
+for (k in 1:nrow(six_grams_tidy_testing[1:100, ])) {
         #toks <- tokens(six_grams_tidy_testing[4,]$`n-1`, concatenator = "_")
         toks <- stri_split_fixed(six_grams_tidy_testing[k, ]$`n-1`, pattern = "_")
         toks <- tail(unlist(toks), 8)
