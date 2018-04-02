@@ -260,7 +260,7 @@ six_grams_tidy_df2 <- six_grams_tidy_df1 %>%
 six_grams_tidy <- as.data.table(six_grams_tidy_df2)
 save(six_grams_tidy, file = "six_grams_tidy_750000.RData")
 
-str(six_grams_tidy)
+
 # Model Input dataset
 input_training <- rbindlist(l = list(two_grams_tidy,
                                 three_grams_tidy,
@@ -326,46 +326,6 @@ f("I never thought I'd")
 
 
 
-
-
-# Backoff model (double backoff)
-a <- NULL
-f <- function(a = NULL) {
-        b <- list(tokens(a)[[1]])
-        b <- stri_join_list(b, sep = "_", collapse = TRUE)
-        if (nrow(input[`n-1` == b, ]) != 0) {
-                c <- as.character(b)
-                c <- gsub(" ", "_", c)
-                print(input[`n-1` == c, ])
-                print("A")
-        }
-        if (nrow(input[`n-1` == b, ]) == 0) {
-                c <- list(tokens(a)[[1]][-1])
-                c <- stri_join_list(c, sep = "_", collapse = TRUE)
-                if (nrow(input[`n-1` == c, ]) != 0) {
-                        d <- as.character(c)
-                        d <- gsub(" ", "_", d)
-                        print(input[`n-1` == d, ])
-                        print("B")
-                }
-                if (nrow(input[`n-1` == c, ]) == 0) {
-                        d <- list(tokens(a)[[1]][-c(1, 2)])
-                        d <- stri_join_list(d, sep = "_", collapse = TRUE)
-                        if (nrow(input[`n-1` == d, ]) != 0) {
-                                e <- as.character(d)
-                                e <- gsub(" ", "_", e)
-                                print(input[`n-1` == e, ])
-                                print("C")
-                        }
-                        if (nrow(input[`n-1` == d, ]) == 0) {
-                                e <- list(tokens(a)[[1]][-c(1, 2, 3)])
-                                e <- stri_join_list(e, sep = "_", collapse = TRUE)
-                                print(input[`n-1` == e, ])
-                                print("D")
-                        }
-                }
-        } Â Â Â Â Â Â 
-}
 
 # table summary of our different data type
 table(us_corpus$documents$source)
