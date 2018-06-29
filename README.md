@@ -11,7 +11,7 @@ model.
 of text and then almost instantaneously receives a prediction for the next word.  Simple!
 * [Click here](https://github.com/etsafe11/text_prediction_model) for 
 the GitHub repo containing a README and full R scripts for our Shiny app
-* Our Shiny app is deployed here:  [this link] (https://etsafe11.shinyapps.io/n-gram_text_prediction_model/)
+* Our Shiny app is deployed here:  [this link](https://etsafe11.shinyapps.io/n-gram_text_prediction_model/)
 
 Description of the Algorithm 
 ========================================================
